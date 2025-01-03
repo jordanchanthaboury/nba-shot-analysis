@@ -11,3 +11,32 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Card styles (added) */
+.card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background-color: white;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.card-header {
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.card-content {}
+
+.card-footer {
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+}
