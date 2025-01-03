@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+      "baseUrl": "src",
+      "paths": {
+        "card": ["card"],
+        "select": ["select"]
+      }
+    },
+    "include": ["src"]
+  }
