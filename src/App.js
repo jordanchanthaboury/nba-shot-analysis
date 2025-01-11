@@ -1,52 +1,164 @@
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from './components/ui/card';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './components/ui/select';
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "./components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const ShotAnalysisDashboard = () => {
-  // Sample data structure - replace with your actual data
-  const teamData = {
-    "Chicago Bulls": {
-      current: {
-        RA: { attempts: 29.9, percentage: 0.63, points: 37.7 },
-        NRA: { attempts: 20.0, percentage: 0.42, points: 16.8 },
-        MR: { attempts: 5.5, percentage: 0.41, points: 4.4 },
-        LC3: { attempts: 4.6, percentage: 0.39, points: 5.4 },
-        RC3: { attempts: 6.1, percentage: 0.43, points: 7.8 },
-        AB3: { attempts: 25.2, percentage: 0.34, points: 25.5 }
-      },
-      optimal: {
-        RA: { attempts: 25.9, percentage: 0.63, points: 32.7 },
-        NRA: { attempts: 15.0, percentage: 0.42, points: 12.6 },
-        MR: { attempts: 4.5, percentage: 0.41, points: 3.6 },
-        LC3: { attempts: 7.6, percentage: 0.39, points: 8.9 },
-        RC3: { attempts: 9.1, percentage: 0.43, points: 11.7 },
-        AB3: { attempts: 29.2, percentage: 0.34, points: 29.7 }
+  const [selectedTeam, setSelectedTeam] = useState("");
+  const [availableTeams, setAvailableTeams] = useState([]);
+  const [teamData, setTeamData] = useState({});
+  const [scoringImpact, setScoringImpact] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        console.log("Fetching teams...");
+        const response = await fetch('http://127.0.0.1:5000/test');
+        const data = await response.json();
+        console.log("Teams data:", data);
+        
+        if (data.available_teams?.length > 0) {
+          setAvailableTeams(data.available_teams);
+          setSelectedTeam(data.available_teams[0]);
+        } else {
+          setError("No teams available");
+        }
+      } catch (err) {
+        console.error("Error fetching teams:", err);
+        setError("Failed to load teams. Is the backend server running?");
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    fetchTeams();
+  }, []);
+
+  useEffect(() => {
+    const fetchTeamData = async () => {
+      if (!selectedTeam) return;
+      
+      setLoading(true);
+      try {
+        // Fetch all team data from our single endpoint
+        const response = await fetch('http://127.0.0.1:5000/api/team-data');
+        const allTeamData = await response.json();
+        
+        // Get selected team's data
+        const teamData = allTeamData[selectedTeam];
+        
+        if (!teamData) {
+          throw new Error('Team data not found');
+        }
+
+        // Format data for the dashboard
+        const formattedData = {
+          shot_analysis: {
+            RA: {
+              current_attempts: teamData.current.RA.attempts,
+              optimal_attempts: teamData.optimal.RA.attempts,
+              current_fg_percentage: teamData.current.RA.percentage,
+              total_expected_value: teamData.current.RA.ev,
+              suggested_change: teamData.impact.RA.attempt_difference
+            },
+            // Repeat for other shot types
+            NRA: {
+              current_attempts: teamData.current.NRA.attempts,
+              optimal_attempts: teamData.optimal.NRA.attempts,
+              current_fg_percentage: teamData.current.NRA.percentage,
+              total_expected_value: teamData.current.NRA.ev,
+              suggested_change: teamData.impact.NRA.attempt_difference
+            },
+            MR: {
+              current_attempts: teamData.current.MR.attempts,
+              optimal_attempts: teamData.optimal.MR.attempts,
+              current_fg_percentage: teamData.current.MR.percentage,
+              total_expected_value: teamData.current.MR.ev,
+              suggested_change: teamData.impact.MR.attempt_difference
+            },
+            LC3: {
+              current_attempts: teamData.current.LC3.attempts,
+              optimal_attempts: teamData.optimal.LC3.attempts,
+              current_fg_percentage: teamData.current.LC3.percentage,
+              total_expected_value: teamData.current.LC3.ev,
+              suggested_change: teamData.impact.LC3.attempt_difference
+            },
+            RC3: {
+              current_attempts: teamData.current.RC3.attempts,
+              optimal_attempts: teamData.optimal.RC3.attempts,
+              current_fg_percentage: teamData.current.RC3.percentage,
+              total_expected_value: teamData.current.RC3.ev,
+              suggested_change: teamData.impact.RC3.attempt_difference
+            },
+            AB3: {
+              current_attempts: teamData.current.AB3.attempts,
+              optimal_attempts: teamData.optimal.AB3.attempts,
+              current_fg_percentage: teamData.current.AB3.percentage,
+              total_expected_value: teamData.current.AB3.ev,
+              suggested_change: teamData.impact.AB3.attempt_difference
+            }
+          }
+        };
+
+        // Create scoring impact data
+        const scoringImpactData = {
+          current_ppg: teamData.current.ppg,
+          optimized_ppg: teamData.optimal.ppg,
+          points_difference: teamData.impact.points_difference,
+          ft_attempts: teamData.current.free_throws.attempts,
+          ft_percentage: teamData.current.free_throws.percentage,
+          projected_wins_impact: teamData.impact.points_difference * 2.7 / 100 // Rough estimate: 2.7 wins per point differential
+        };
+
+        setTeamData(formattedData);
+        setScoringImpact(scoringImpactData);
+      } catch (err) {
+        setError("Failed to load team analysis");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeamData();
+  }, [selectedTeam]);
+
+  const shotTypeLabels = {
+    'RA': 'Restricted Area',
+    'NRA': 'Non-Restricted Area',
+    'MR': 'Mid Range',
+    'LC3': 'Left Corner 3',
+    'RC3': 'Right Corner 3',
+    'AB3': 'Above Break 3'
   };
 
-  const [selectedTeam, setSelectedTeam] = useState("Chicago Bulls");
-
-  // Transform data for the chart
-  const prepareChartData = (team) => {
-    const data = [];
-    const shotTypes = ['RA', 'NRA', 'MR', 'LC3', 'RC3', 'AB3'];
-    
-    shotTypes.forEach(type => {
-      data.push({
-        name: type,
-        current: team.current[type].attempts,
-        optimal: team.optimal[type].attempts,
-        currentEV: (team.current[type].percentage * (type.includes('3') ? 3 : 2)).toFixed(2),
-        optimalEV: (team.optimal[type].percentage * (type.includes('3') ? 3 : 2)).toFixed(2)
-      });
-    });
-    return data;
-  };
+  if (loading) return (
+    <div className="flex justify-center items-center h-screen">
+      <p className="text-lg">Loading... Please make sure the backend server is running.</p>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="flex justify-center items-center h-screen">
+      <p className="text-lg text-red-500">{error}</p>
+    </div>
+  );
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 space-y-4">
+    <div className="w-full max-w-7xl mx-auto p-4 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-bold">NBA Shot Analysis Dashboard</CardTitle>
@@ -56,70 +168,126 @@ const ShotAnalysisDashboard = () => {
                 <SelectValue placeholder="Select a team" />
               </SelectTrigger>
               <SelectContent>
-                {Object.keys(teamData).map(team => (
+                {availableTeams.map(team => (
                   <SelectItem key={team} value={team}>{team}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Shot Distribution Chart */}
-            <Card>
+
+        {scoringImpact && (
+          <CardContent>
+            <Card className="mb-6">
               <CardHeader>
-                <CardTitle>Shot Distribution Analysis</CardTitle>
+                <CardTitle>Scoring Impact Analysis</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={prepareChartData(teamData[selectedTeam])}>
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="current" name="Current Attempts" fill="#93c5fd" />
-                      <Bar dataKey="optimal" name="Optimal Attempts" fill="#3b82f6" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-lg">
+                      Current PPG: <span className="font-bold">{scoringImpact.current_ppg.toFixed(1)}</span>
+                    </p>
+                    <p className="text-lg">
+                      Optimized PPG: <span className="font-bold">{scoringImpact.optimized_ppg.toFixed(1)}</span>
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-lg">
+                      Points Impact: 
+                      <span className={`font-bold ${scoringImpact.points_difference > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {' '}{scoringImpact.points_difference > 0 ? '+' : ''}{scoringImpact.points_difference.toFixed(1)}
+                      </span>
+                    </p>
+                    <p className="text-lg">
+                      Projected Wins Impact: 
+                      <span className={`font-bold ${scoringImpact.projected_wins_impact > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {' '}{scoringImpact.projected_wins_impact > 0 ? '+' : ''}{scoringImpact.projected_wins_impact.toFixed(1)}
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Expected Value Analysis */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Expected Value Analysis</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {prepareChartData(teamData[selectedTeam]).map(shot => (
-                    <div key={shot.name} className="p-4 border rounded-lg">
-                      <h3 className="font-semibold">{shot.name} Shots</h3>
-                      <div className="grid grid-cols-2 gap-4 mt-2">
-                        <div>
-                          <p>Current: {shot.current.toFixed(1)} attempts</p>
-                          <p>EV: {shot.currentEV} points/shot</p>
-                        </div>
-                        <div>
-                          <p>Optimal: {shot.optimal.toFixed(1)} attempts</p>
-                          <p className={
-                            Number(shot.optimal) > Number(shot.current) 
-                              ? "text-green-600" 
-                              : "text-red-600"
-                          }>
-                            {Number(shot.optimal) > Number(shot.current) ? "Increase" : "Decrease"} by{" "}
-                            {Math.abs(shot.optimal - shot.current).toFixed(1)}
-                          </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Shot Distribution Analysis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[500px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart 
+                        data={Object.entries(teamData.shot_analysis).map(([type, data]) => ({
+                          name: shotTypeLabels[type],
+                          current: data.current_attempts,
+                          optimal: data.optimal_attempts,
+                        }))}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                      >
+                        <XAxis 
+                          dataKey="name" 
+                          angle={-45} 
+                          textAnchor="end" 
+                          height={100}
+                          interval={0}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend 
+                          verticalAlign="top" 
+                          height={36}
+                        />
+                        <Bar 
+                          dataKey="current" 
+                          name="Current Attempts" 
+                          fill="#93c5fd" 
+                          barSize={30}
+                        />
+                        <Bar 
+                          dataKey="optimal" 
+                          name="Optimal Attempts" 
+                          fill="#3b82f6" 
+                          barSize={30}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Shot Type Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {Object.entries(teamData.shot_analysis).map(([type, data]) => (
+                      <div key={type} className="p-4 border rounded-lg">
+                        <h3 className="font-semibold text-lg mb-2">{shotTypeLabels[type]}</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p>FG%: {(data.current_fg_percentage * 100).toFixed(1)}%</p>
+                            <p>Current: {data.current_attempts.toFixed(1)} attempts</p>
+                            <p>Expected Value: {data.total_expected_value.toFixed(2)} points/shot</p>
+                          </div>
+                          <div>
+                            <p>Optimal: {data.optimal_attempts.toFixed(1)} attempts</p>
+                            <p className={`font-semibold ${data.suggested_change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {data.suggested_change > 0 ? 'Increase' : 'Decrease'} by {Math.abs(data.suggested_change).toFixed(1)}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </CardContent>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        )}
       </Card>
     </div>
   );
