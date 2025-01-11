@@ -120,7 +120,7 @@ const ShotAnalysisDashboard = () => {
           points_difference: teamData.impact.points_difference,
           ft_attempts: teamData.current.free_throws.attempts,
           ft_percentage: teamData.current.free_throws.percentage,
-          projected_wins_impact: teamData.impact.points_difference * 2.7 / 100 // Rough estimate: 2.7 wins per point differential
+          projected_wins_impact: teamData.impact.points_difference * 2.7 // Rough estimate: 2.7 wins per point differential
         };
 
         setTeamData(formattedData);
