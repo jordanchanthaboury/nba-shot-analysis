@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/jordanchanthaboury/nba-shot-analysis/static/css/main.00b70ad6.css",
-    "main.js": "/jordanchanthaboury/nba-shot-analysis/static/js/main.67cadd9e.js",
-    "static/js/488.1b338b03.chunk.js": "/jordanchanthaboury/nba-shot-analysis/static/js/488.1b338b03.chunk.js",
-    "index.html": "/jordanchanthaboury/nba-shot-analysis/index.html",
-    "main.00b70ad6.css.map": "/jordanchanthaboury/nba-shot-analysis/static/css/main.00b70ad6.css.map",
-    "main.67cadd9e.js.map": "/jordanchanthaboury/nba-shot-analysis/static/js/main.67cadd9e.js.map",
-    "488.1b338b03.chunk.js.map": "/jordanchanthaboury/nba-shot-analysis/static/js/488.1b338b03.chunk.js.map"
+    "main.css": "/nba-shot-analysis/static/css/main.00b70ad6.css",
+    "main.js": "/nba-shot-analysis/static/js/main.b22436af.js",
+    "static/js/488.1b338b03.chunk.js": "/nba-shot-analysis/static/js/488.1b338b03.chunk.js",
+    "index.html": "/nba-shot-analysis/index.html",
+    "main.00b70ad6.css.map": "/nba-shot-analysis/static/css/main.00b70ad6.css.map",
+    "main.b22436af.js.map": "/nba-shot-analysis/static/js/main.b22436af.js.map",
+    "488.1b338b03.chunk.js.map": "/nba-shot-analysis/static/js/488.1b338b03.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.00b70ad6.css",
-    "static/js/main.67cadd9e.js"
+    "static/js/main.b22436af.js"
   ]
 }
