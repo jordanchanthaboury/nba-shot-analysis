@@ -34,13 +34,15 @@ def analyze_shot_optimization(df):
     for _, team in df.iterrows():
         team_analysis = {'Team': team['Team']}
         
-        # Calculate current points (including free throws)
+        # Calculate current points from field goals
         current_fg_points = sum(team[f'{shot_type}_FGA'] * team[f'{shot_type}_FG%'] / 100 * points 
                               for shot_type, points in shot_types.items())
-        current_ft_points = team['FTA'] * team['FT%'] / 100
+        
+        # Add free throw points
+        current_ft_points = team['FT']
         current_total_points = current_fg_points + current_ft_points
         
-        # Calculate optimal points
+        # Calculate optimal points (keeping free throws the same)
         shot_evs = {shot_type: team[f'{shot_type}_FG%'] / 100 * points 
                    for shot_type, points in shot_types.items()}
         total_ev = sum(shot_evs.values())
@@ -52,7 +54,7 @@ def analyze_shot_optimization(df):
             optimal_points = optimal_attempts * team[f'{shot_type}_FG%'] / 100 * points
             optimal_fg_points += optimal_points
         
-        optimal_total_points = optimal_fg_points + current_ft_points  # Keep same FT points
+        optimal_total_points = optimal_fg_points + current_ft_points  # Include free throw points
         
         team_analysis.update({
             'current_ppg': current_total_points,

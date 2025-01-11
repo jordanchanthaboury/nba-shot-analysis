@@ -210,13 +210,13 @@ const ShotAnalysisDashboard = () => {
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              <Card className="w-full">
                 <CardHeader>
                   <CardTitle>Shot Distribution Analysis</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[500px]">
+                  <div className="h-[600px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart 
                         data={Object.entries(teamData.shot_analysis).map(([type, data]) => ({
@@ -244,13 +244,13 @@ const ShotAnalysisDashboard = () => {
                           dataKey="current" 
                           name="Current Attempts" 
                           fill="#93c5fd" 
-                          barSize={30}
+                          barSize={40}
                         />
                         <Bar 
                           dataKey="optimal" 
                           name="Optimal Attempts" 
                           fill="#3b82f6" 
-                          barSize={30}
+                          barSize={40}
                         />
                       </BarChart>
                     </ResponsiveContainer>
@@ -258,27 +258,31 @@ const ShotAnalysisDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="w-full">
                 <CardHeader>
                   <CardTitle>Shot Type Details</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-8">
                     {Object.entries(teamData.shot_analysis).map(([type, data]) => (
-                      <div key={type} className="p-4 border rounded-lg">
-                        <h3 className="font-semibold text-lg mb-2">{shotTypeLabels[type]}</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p>FG%: {(data.current_fg_percentage * 100).toFixed(1)}%</p>
-                            <p>Current: {data.current_attempts.toFixed(1)} attempts</p>
-                            <p>Expected Value: {data.total_expected_value.toFixed(2)} points/shot</p>
-                          </div>
-                          <div>
-                            <p>Optimal: {data.optimal_attempts.toFixed(1)} attempts</p>
-                            <p className={`font-semibold ${data.suggested_change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {data.suggested_change > 0 ? 'Increase' : 'Decrease'} by {Math.abs(data.suggested_change).toFixed(1)}
-                            </p>
-                          </div>
+                      <div key={type} className="p-8 border rounded-lg bg-gray-50">
+                        <h3 className="font-semibold text-2xl mb-6">{shotTypeLabels[type]}</h3>
+                        <div className="grid grid-cols-2 gap-x-16 gap-y-4">
+                          <p className="text-xl">
+                            <span className="font-medium">FG%:</span> {(data.current_fg_percentage * 100).toFixed(1)}%
+                          </p>
+                          <p className="text-xl">
+                            <span className="font-medium">Expected Value:</span> {data.total_expected_value.toFixed(2)} points/shot
+                          </p>
+                          <p className="text-xl">
+                            <span className="font-medium">Current:</span> {data.current_attempts.toFixed(1)} attempts
+                          </p>
+                          <p className="text-xl">
+                            <span className="font-medium">Optimal:</span> {data.optimal_attempts.toFixed(1)} attempts
+                          </p>
+                          <p className={`text-xl font-semibold col-span-2 ${data.suggested_change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {data.suggested_change > 0 ? 'Increase' : 'Decrease'} by {Math.abs(data.suggested_change).toFixed(1)}
+                          </p>
                         </div>
                       </div>
                     ))}
