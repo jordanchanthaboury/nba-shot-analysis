@@ -20,6 +20,7 @@ shot_types = {
 def analyze_shot_optimization(df):
     """
     Analyzes how teams should adjust their shot selection based on Expected Value.
+    Includes both current and optimal makes calculations.
     """
     # First calculate EV for each shot type
     for shot_type, points in shot_types.items():
@@ -34,9 +35,14 @@ def analyze_shot_optimization(df):
     for _, team in df.iterrows():
         team_analysis = {'Team': team['Team']}
         
-        # Calculate current points from field goals
-        current_fg_points = sum(team[f'{shot_type}_FGA'] * team[f'{shot_type}_FG%'] / 100 * points 
-                              for shot_type, points in shot_types.items())
+        # Calculate current points and makes from field goals
+        current_fg_points = 0
+        for shot_type, points in shot_types.items():
+            current_attempts = team[f'{shot_type}_FGA']
+            current_fg_pct = team[f'{shot_type}_FG%'] / 100
+            current_makes = current_attempts * current_fg_pct
+            current_points = current_makes * points
+            current_fg_points += current_points
         
         # Add free throw points
         current_ft_points = team['FT']
@@ -51,10 +57,12 @@ def analyze_shot_optimization(df):
         for shot_type, points in shot_types.items():
             optimal_proportion = shot_evs[shot_type] / total_ev
             optimal_attempts = team['Total_FGA'] * optimal_proportion
-            optimal_points = optimal_attempts * team[f'{shot_type}_FG%'] / 100 * points
+            optimal_fg_pct = team[f'{shot_type}_FG%'] / 100
+            optimal_makes = optimal_attempts * optimal_fg_pct
+            optimal_points = optimal_makes * points
             optimal_fg_points += optimal_points
         
-        optimal_total_points = optimal_fg_points + current_ft_points  # Include free throw points
+        optimal_total_points = optimal_fg_points + current_ft_points
         
         team_analysis.update({
             'current_ppg': current_total_points,
@@ -67,16 +75,27 @@ def analyze_shot_optimization(df):
         for shot_type in shot_types:
             fg_pct = team[f'{shot_type}_FG%'] / 100
             ev = fg_pct * shot_types[shot_type]
+            
+            # Current statistics
+            current_attempts = team[f'{shot_type}_FGA']
+            current_makes = current_attempts * fg_pct
+            
+            # Optimal statistics
             optimal_proportion = shot_evs[shot_type] / total_ev
             optimal_attempts = team['Total_FGA'] * optimal_proportion
-            attempt_difference = optimal_attempts - team[f'{shot_type}_FGA']
+            optimal_makes = optimal_attempts * fg_pct
+            attempt_difference = optimal_attempts - current_attempts
+            makes_difference = optimal_makes - current_makes
             
             team_analysis.update({
                 f'{shot_type}_Current_FG%': fg_pct,
                 f'{shot_type}_EV': ev,
-                f'{shot_type}_Current_Attempts': team[f'{shot_type}_FGA'],
+                f'{shot_type}_Current_Attempts': current_attempts,
+                f'{shot_type}_Current_Makes': current_makes,
                 f'{shot_type}_Optimal_Attempts': optimal_attempts,
-                f'{shot_type}_Attempt_Diff': attempt_difference
+                f'{shot_type}_Optimal_Makes': optimal_makes,
+                f'{shot_type}_Attempt_Diff': attempt_difference,
+                f'{shot_type}_Makes_Diff': makes_difference
             })
         
         analysis_results.append(team_analysis)
@@ -136,16 +155,19 @@ def serve_team_data():
             for shot_type in shot_types:
                 team_data[team_name]["current"][shot_type] = {
                     "attempts": float(team_analysis[f'{shot_type}_Current_Attempts']),
+                    "makes": float(team_analysis[f'{shot_type}_Current_Makes']),
                     "percentage": float(team_analysis[f'{shot_type}_Current_FG%']),
                     "ev": float(team_analysis[f'{shot_type}_EV'])
                 }
                 
                 team_data[team_name]["optimal"][shot_type] = {
-                    "attempts": float(team_analysis[f'{shot_type}_Optimal_Attempts'])
+                    "attempts": float(team_analysis[f'{shot_type}_Optimal_Attempts']),
+                    "makes": float(team_analysis[f'{shot_type}_Optimal_Makes'])
                 }
                 
                 team_data[team_name]["impact"][shot_type] = {
-                    "attempt_difference": float(team_analysis[f'{shot_type}_Attempt_Diff'])
+                    "attempt_difference": float(team_analysis[f'{shot_type}_Attempt_Diff']),
+                    "makes_difference": float(team_analysis[f'{shot_type}_Makes_Diff'])
                 }
         
         return jsonify(team_data)
@@ -158,4 +180,4 @@ if __name__ == '__main__':
     print("\n=== Starting Flask Server ===", flush=True)
     print("Try accessing: http://127.0.0.1:5000/test", flush=True)
     sys.stdout.flush()
-    app.run(debug=True, port=5000) 
+    app.run(debug=True, port=5000)
